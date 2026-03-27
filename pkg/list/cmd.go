@@ -16,6 +16,7 @@ func CmdList(settings sett.SettItf) *cobra.Command {
 		Short: "Lista todos os casos de teste salvos",
 		Run: func(_ *cobra.Command, args []string) {
 			settings := settings.LoadSettings()
+
 			outputDir := settings["output_dir"]
 			if outputDir == "" {
 				home, _ := os.UserHomeDir()
@@ -33,6 +34,7 @@ func CmdList(settings sett.SettItf) *cobra.Command {
 			for _, file := range files {
 				if filepath.Ext(file.Name()) == ".json" {
 					path := filepath.Join(outputDir, file.Name())
+
 					data, err := os.ReadFile(path)
 					if err != nil {
 						continue

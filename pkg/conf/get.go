@@ -12,7 +12,9 @@ func (c *Conf) CmdGet() *cobra.Command {
 		Short: "Exibe a configuração atual",
 		Run: func(cmd *cobra.Command, args []string) {
 			settings := c.settings.LoadSettings()
+
 			fmt.Println("📦 Configuração atual:")
+
 			for k, v := range settings {
 				fmt.Printf("%s: %s\n", k, v)
 			}

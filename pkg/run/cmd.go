@@ -61,6 +61,7 @@ Exemplo: rabbix run meu-teste`,
 
 			// Carrega configuração para obter diretório de saída
 			settings := r.settings.LoadSettings()
+
 			outputDir := settings["output_dir"]
 			if outputDir == "" {
 				home, _ := os.UserHomeDir()
@@ -69,10 +70,12 @@ Exemplo: rabbix run meu-teste`,
 
 			// Lê o arquivo do teste
 			testPath := filepath.Join(outputDir, testName+".json")
+
 			data, err := os.ReadFile(testPath)
 			if err != nil {
 				fmt.Printf("❌ Erro: Teste '%s' não encontrado em %s\n", testName, testPath)
 				fmt.Println("💡 Use 'rabbix list' para ver os testes disponíveis")
+
 				return
 			}
 
@@ -89,6 +92,7 @@ Exemplo: rabbix run meu-teste`,
 
 			// Parser do mockSpec -> []string de "campo:tipo"
 			var mockPairs []string
+
 			if strings.TrimSpace(mockSpec) != "" {
 				// permite JSON array ou lista separada por vírgula
 				trim := strings.TrimSpace(mockSpec)
@@ -120,6 +124,7 @@ Exemplo: rabbix run meu-teste`,
 			if quantity > 1 {
 				fmt.Printf("🔁 Quantidade: %d\n", quantity)
 			}
+
 			if len(mockPairs) > 0 {
 				fmt.Printf("🧪 Mock: %v\n", mockPairs)
 			}
@@ -129,18 +134,23 @@ Exemplo: rabbix run meu-teste`,
 				if len(mockPairs) > 0 {
 					seed := time.Now().UnixNano() + int64(i)
 					rng := rand.New(rand.NewSource(seed))
+
 					for _, pair := range mockPairs {
 						if pair == "" {
 							continue
 						}
+
 						parts := strings.SplitN(pair, ":", 2)
 						if len(parts) != 2 {
 							fmt.Printf("⚠️  Par inválido em --mock: '%s' (esperado 'campo:tipo')\n", pair)
 							continue
 						}
+
 						field := strings.TrimSpace(parts[0])
 						typeName := strings.ToLower(strings.TrimSpace(parts[1]))
+
 						var value any
+
 						switch typeName {
 						case "int":
 							value = rng.Intn(1000000)
@@ -154,6 +164,7 @@ Exemplo: rabbix run meu-teste`,
 							value = rng.Intn(2) == 0
 						default:
 							fmt.Printf("⚠️  Tipo desconhecido '%s' para campo '%s'. Usando string.\n", typeName, field)
+
 							value = randomString(8, rng)
 						}
 						// aplica no JSONPool

@@ -55,14 +55,17 @@ Exemplos:
 
 			// Filtra testes que já foram especificados
 			var suggestions []string
+
 			for _, test := range cachedTests {
 				alreadyUsed := false
+
 				for _, arg := range args {
 					if arg == test {
 						alreadyUsed = true
 						break
 					}
 				}
+
 				if !alreadyUsed {
 					suggestions = append(suggestions, test)
 				}
@@ -72,6 +75,7 @@ Exemplos:
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			settings := b.settings.LoadSettings()
+
 			outputDir := settings["output_dir"]
 			if outputDir == "" {
 				home, _ := os.UserHomeDir()
@@ -109,8 +113,10 @@ Exemplos:
 
 			// Carrega todos os casos de teste
 			var testCases []rabbix.TestCase
+
 			for _, testName := range testNames {
 				testPath := filepath.Join(outputDir, testName+".json")
+
 				data, err := os.ReadFile(testPath)
 				if err != nil {
 					fmt.Printf("⚠️  Pulando teste '%s': arquivo não encontrado\n", testName)
@@ -144,6 +150,7 @@ Exemplos:
 
 			success := 0
 			failed := 0
+
 			for _, result := range results {
 				if result.Success {
 					success++
@@ -158,6 +165,7 @@ Exemplos:
 
 			if failed > 0 {
 				fmt.Println("\n🔍 Detalhes das falhas:")
+
 				for _, result := range results {
 					if !result.Success {
 						fmt.Printf("  • %s: %s\n", result.TestName, result.Error)
@@ -206,6 +214,7 @@ func (b *Batch) executeBatch(testCases []rabbix.TestCase, concurrency int, delay
 
 			// Adquire semáforo para controlar concorrência
 			semaphore <- struct{}{}
+
 			defer func() { <-semaphore }()
 
 			// Aplica delay se não for o primeiro teste
@@ -256,6 +265,7 @@ func (b *Batch) executeBatch(testCases []rabbix.TestCase, concurrency int, delay
 
 			// Thread-safe append
 			mutex.Lock()
+
 			results = append(results, result)
 			mutex.Unlock()
 		}(i, tc)

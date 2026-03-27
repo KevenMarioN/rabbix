@@ -23,6 +23,7 @@ func CmdHealth(settings sett.SettItf) *cobra.Command {
 			if auth == "" {
 				fmt.Printf("necessario configurar user e password com o comando " +
 					"'rabbix conf set --user <user> --password <password>'\n")
+
 				return
 			}
 
@@ -47,11 +48,13 @@ func CmdHealth(settings sett.SettItf) *cobra.Command {
 			req.Header.Add("Authorization", auth)
 
 			client := &http.Client{}
+
 			resp, err := client.Do(req)
 			if err != nil {
 				fmt.Printf("❌ Erro ao fazer requisição: %v\n", err)
 				return
 			}
+
 			defer func() {
 				if err := resp.Body.Close(); err != nil {
 					fmt.Printf("❌ Erro ao fechar corpo da resposta: %v\n", err)
