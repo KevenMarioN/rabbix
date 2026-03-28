@@ -30,6 +30,7 @@ func TestSett_LoadEnvs(t *testing.T) {
 	}
 
 	envsPath := filepath.Join(tmpDir, "envs.json")
+
 	envsJSON, _ := json.MarshalIndent(envsData, "", "  ")
 	if err := os.WriteFile(envsPath, envsJSON, 0644); err != nil {
 		t.Fatalf("Failed to write envs.json: %v", err)
@@ -40,6 +41,7 @@ func TestSett_LoadEnvs(t *testing.T) {
 	settingsData := map[string]string{
 		"envs_file": envsPath,
 	}
+
 	settingsJSON, _ := json.MarshalIndent(settingsData, "", "  ")
 	if err := os.WriteFile(settingsPath, settingsJSON, 0644); err != nil {
 		t.Fatalf("Failed to write settings.json: %v", err)
@@ -82,6 +84,7 @@ func TestSett_LoadEnvs(t *testing.T) {
 				if err == nil {
 					t.Error("LoadEnvs() expected error, got nil")
 				}
+
 				return
 			}
 
@@ -113,6 +116,7 @@ func TestSett_ListAmbients(t *testing.T) {
 	}
 
 	envsPath := filepath.Join(tmpDir, "envs.json")
+
 	envsJSON, _ := json.MarshalIndent(envsData, "", "  ")
 	if err := os.WriteFile(envsPath, envsJSON, 0644); err != nil {
 		t.Fatalf("Failed to write envs.json: %v", err)
@@ -123,20 +127,22 @@ func TestSett_ListAmbients(t *testing.T) {
 	settingsData := map[string]string{
 		"envs_file": envsPath,
 	}
+
 	settingsJSON, _ := json.MarshalIndent(settingsData, "", "  ")
 	if err := os.WriteFile(settingsPath, settingsJSON, 0644); err != nil {
 		t.Fatalf("Failed to write settings.json: %v", err)
 	}
 
 	s := &Sett{path: settingsPath}
-	result, err := s.ListAmbients()
 
+	result, err := s.ListAmbients()
 	if err != nil {
 		t.Errorf("ListAmbients() unexpected error: %v", err)
 		return
 	}
 
 	expected := []string{"local", "dev", "prod"}
+
 	sort.Strings(result)
 	sort.Strings(expected)
 
@@ -158,14 +164,15 @@ func TestSett_ListAmbients_NoEnvsFile(t *testing.T) {
 	settingsData := map[string]string{
 		"host": "http://localhost:15672",
 	}
+
 	settingsJSON, _ := json.MarshalIndent(settingsData, "", "  ")
 	if err := os.WriteFile(settingsPath, settingsJSON, 0644); err != nil {
 		t.Fatalf("Failed to write settings.json: %v", err)
 	}
 
 	s := &Sett{path: settingsPath}
-	result, err := s.ListAmbients()
 
+	result, err := s.ListAmbients()
 	if err != nil {
 		t.Errorf("ListAmbients() unexpected error: %v", err)
 		return
@@ -190,6 +197,7 @@ func TestSett_LoadEnvs_AbsolutePath(t *testing.T) {
 	}
 
 	envsPath := filepath.Join(tmpDir, "envs.json")
+
 	envsJSON, _ := json.MarshalIndent(envsData, "", "  ")
 	if err := os.WriteFile(envsPath, envsJSON, 0644); err != nil {
 		t.Fatalf("Failed to write envs.json: %v", err)
@@ -200,14 +208,15 @@ func TestSett_LoadEnvs_AbsolutePath(t *testing.T) {
 	settingsData := map[string]string{
 		"envs_file": envsPath, // absolute path
 	}
+
 	settingsJSON, _ := json.MarshalIndent(settingsData, "", "  ")
 	if err := os.WriteFile(settingsPath, settingsJSON, 0644); err != nil {
 		t.Fatalf("Failed to write settings.json: %v", err)
 	}
 
 	s := &Sett{path: settingsPath}
-	result, err := s.LoadEnvs("local")
 
+	result, err := s.LoadEnvs("local")
 	if err != nil {
 		t.Errorf("LoadEnvs() unexpected error: %v", err)
 		return

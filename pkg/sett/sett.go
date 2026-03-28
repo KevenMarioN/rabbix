@@ -104,6 +104,7 @@ func (s *Sett) SaveSettings(settings map[string]string) {
 
 func (s *Sett) LoadEnvs(ambient string) (map[string]string, error) {
 	settings := s.LoadSettings()
+
 	envsFile := settings["envs_file"]
 	if envsFile == "" {
 		return nil, nil
@@ -141,6 +142,7 @@ func (s *Sett) LoadEnvs(ambient string) (map[string]string, error) {
 
 func (s *Sett) ListAmbients() ([]string, error) {
 	settings := s.LoadSettings()
+
 	envsFile := settings["envs_file"]
 	if envsFile == "" {
 		return nil, nil

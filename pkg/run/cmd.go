@@ -64,6 +64,7 @@ Exemplo: rabbix run meu-teste`,
 			if envAmbient != "" && strings.TrimSpace(mockSpec) != "" {
 				fmt.Println("❌ Erro: As flags --env e --mock não podem ser usadas juntas")
 				fmt.Println("💡 Use --env para substituir variáveis do ambiente ou --mock para gerar dados dinâmicos")
+
 				return
 			}
 
@@ -98,24 +99,31 @@ Exemplo: rabbix run meu-teste`,
 				envs, err := r.settings.LoadEnvs(envToUse)
 				if err != nil {
 					fmt.Printf("❌ Erro ao carregar ambiente '%s': %v\n", envToUse, err)
+
 					ambients, listErr := r.settings.ListAmbients()
 					if listErr == nil && len(ambients) > 0 {
 						fmt.Println("📋 Ambientes disponíveis:")
+
 						for _, a := range ambients {
 							fmt.Printf("  - %s\n", a)
 						}
 					}
+
 					return
 				}
+
 				if envs != nil {
 					// Verifica variáveis faltantes antes de substituir
 					missing := FindMissingEnvs(data, envs)
 					if len(missing) > 0 {
 						fmt.Printf("❌ Variáveis não encontradas no ambiente '%s': %v\n", envToUse, missing)
 						fmt.Println("💡 Verifique o arquivo envs.json e adicione as variáveis necessárias")
+
 						return
 					}
+
 					data = ReplaceEnvs(data, envs)
+
 					fmt.Printf("🔧 Ambiente: %s\n", envToUse)
 				}
 			}

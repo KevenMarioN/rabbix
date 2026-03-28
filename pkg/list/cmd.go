@@ -40,6 +40,7 @@ func CmdList(settings sett.SettItf) *cobra.Command {
 					if strings.EqualFold(baseName, "env") || strings.EqualFold(baseName, "envs") {
 						continue
 					}
+
 					path := filepath.Join(outputDir, name)
 
 					data, err := os.ReadFile(path)

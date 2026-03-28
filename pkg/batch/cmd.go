@@ -101,6 +101,7 @@ Exemplos:
 						if strings.EqualFold(baseName, "env") || strings.EqualFold(baseName, "envs") {
 							continue
 						}
+
 						testNames = append(testNames, baseName)
 					}
 				}

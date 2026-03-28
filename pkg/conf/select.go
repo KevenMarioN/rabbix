@@ -50,6 +50,7 @@ func (c *Conf) CmdSelect() *cobra.Command {
 			}
 
 			profileName := args[0]
+
 			file := profileName
 			if !strings.HasSuffix(strings.ToLower(file), ".json") {
 				file += ".json"
@@ -63,7 +64,6 @@ func (c *Conf) CmdSelect() *cobra.Command {
 
 			// Create the configuration if it does not exist.
 			if _, err := os.Stat(target); os.IsNotExist(err) {
-
 				defaultCfg := map[string]string{
 					"auth":        "Z3Vlc3Q6Z3Vlc3Q=",
 					"host":        "http://localhost:15672",
@@ -101,6 +101,7 @@ func (c *Conf) CmdSelect() *cobra.Command {
 						"Content-Type": "application/json",
 					},
 				}
+
 				testPath := filepath.Join(testsDir, "example-test.json")
 				if data, err := json.MarshalIndent(defaultTest, "", "  "); err == nil {
 					_ = os.WriteFile(testPath, data, 0644)
@@ -153,6 +154,7 @@ func listConfigFiles(baseDir string) []string {
 			if strings.EqualFold(baseName, "env") || strings.EqualFold(baseName, "envs") {
 				continue
 			}
+
 			out = append(out, baseName)
 		}
 	}
