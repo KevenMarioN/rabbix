@@ -2,6 +2,7 @@ package sett
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -10,6 +11,8 @@ type SettItf interface {
 	LoadSettings() map[string]string
 	SaveSettings(settings map[string]string)
 	GetBaseDir() string
+	LoadEnvs(ambient string) (map[string]string, error)
+	ListAmbients() ([]string, error)
 }
 
 var _ SettItf = (*Sett)(nil)
@@ -97,4 +100,74 @@ func (s *Sett) SaveSettings(settings map[string]string) {
 
 	data, _ := json.MarshalIndent(settings, "", "  ")
 	_ = os.WriteFile(s.path, data, 0644)
+}
+
+func (s *Sett) LoadEnvs(ambient string) (map[string]string, error) {
+	settings := s.LoadSettings()
+	envsFile := settings["envs_file"]
+	if envsFile == "" {
+		return nil, nil
+	}
+
+	// Suporta caminho absoluto ou relativo ao baseDir
+	var envsPath string
+	if filepath.IsAbs(envsFile) {
+		envsPath = envsFile
+	} else {
+		envsPath = filepath.Join(s.GetBaseDir(), envsFile)
+	}
+
+	data, err := os.ReadFile(envsPath)
+	if err != nil {
+		return nil, fmt.Errorf("arquivo de envs não encontrado: %s", envsPath)
+	}
+
+	var allEnvs map[string]map[string]string
+	if err := json.Unmarshal(data, &allEnvs); err != nil {
+		return nil, fmt.Errorf("erro ao parsear arquivo de envs: %v", err)
+	}
+
+	if ambient == "" {
+		return nil, nil
+	}
+
+	envs, ok := allEnvs[ambient]
+	if !ok {
+		return nil, fmt.Errorf("ambiente '%s' não encontrado", ambient)
+	}
+
+	return envs, nil
+}
+
+func (s *Sett) ListAmbients() ([]string, error) {
+	settings := s.LoadSettings()
+	envsFile := settings["envs_file"]
+	if envsFile == "" {
+		return nil, nil
+	}
+
+	// Suporta caminho absoluto ou relativo ao baseDir
+	var envsPath string
+	if filepath.IsAbs(envsFile) {
+		envsPath = envsFile
+	} else {
+		envsPath = filepath.Join(s.GetBaseDir(), envsFile)
+	}
+
+	data, err := os.ReadFile(envsPath)
+	if err != nil {
+		return nil, fmt.Errorf("arquivo de envs não encontrado: %s", envsPath)
+	}
+
+	var allEnvs map[string]map[string]string
+	if err := json.Unmarshal(data, &allEnvs); err != nil {
+		return nil, fmt.Errorf("erro ao parsear arquivo de envs: %v", err)
+	}
+
+	ambients := make([]string, 0, len(allEnvs))
+	for name := range allEnvs {
+		ambients = append(ambients, name)
+	}
+
+	return ambients, nil
 }

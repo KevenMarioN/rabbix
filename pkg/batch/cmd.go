@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -93,9 +94,14 @@ Exemplos:
 				}
 
 				for _, file := range files {
-					if filepath.Ext(file.Name()) == ".json" {
-						name := file.Name()[:len(file.Name())-5] // remove .json
-						testNames = append(testNames, name)
+					name := file.Name()
+					if filepath.Ext(name) == ".json" {
+						baseName := strings.TrimSuffix(name, ".json")
+						// Ignora arquivos de variáveis de ambiente
+						if strings.EqualFold(baseName, "env") || strings.EqualFold(baseName, "envs") {
+							continue
+						}
+						testNames = append(testNames, baseName)
 					}
 				}
 			} else {
