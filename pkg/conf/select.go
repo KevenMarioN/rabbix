@@ -59,7 +59,7 @@ func (c *Conf) CmdSelect() *cobra.Command {
 			target := filepath.Join(baseDir, file)
 
 			// Create profile directory first (always ensure it exists)
-			profileDir := filepath.Join(baseDir, strings.TrimSuffix(file, ".json"))
+			profileDir := filepath.Join(baseDir, profileName)
 			_ = os.MkdirAll(profileDir, os.ModePerm)
 
 			// Create the configuration if it does not exist.
