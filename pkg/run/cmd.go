@@ -37,8 +37,9 @@ func New(
 
 func (r *Run) CmdRun() *cobra.Command {
 	var (
-		quantity int
-		mockSpec string
+		quantity   int
+		mockSpec   string
+		envAmbient string
 	)
 
 	var cmd = &cobra.Command{
@@ -59,6 +60,14 @@ Exemplo: rabbix run meu-teste`,
 		Run: func(cmd *cobra.Command, args []string) {
 			testName := args[0]
 
+			// Validação: --env e --mock são mutuamente exclusivos
+			if envAmbient != "" && strings.TrimSpace(mockSpec) != "" {
+				fmt.Println("❌ Erro: As flags --env e --mock não podem ser usadas juntas")
+				fmt.Println("💡 Use --env para substituir variáveis do ambiente ou --mock para gerar dados dinâmicos")
+
+				return
+			}
+
 			// Carrega configuração para obter diretório de saída
 			settings := r.settings.LoadSettings()
 
@@ -77,6 +86,46 @@ Exemplo: rabbix run meu-teste`,
 				fmt.Println("💡 Use 'rabbix list' para ver os testes disponíveis")
 
 				return
+			}
+
+			// Substituição de variáveis de ambiente
+			// Prioridade: --env > default_env da configuração
+			envToUse := envAmbient
+			if envToUse == "" {
+				envToUse = settings["default_env"]
+			}
+
+			if envToUse != "" {
+				envs, err := r.settings.LoadEnvs(envToUse)
+				if err != nil {
+					fmt.Printf("❌ Erro ao carregar ambiente '%s': %v\n", envToUse, err)
+
+					ambients, listErr := r.settings.ListAmbients()
+					if listErr == nil && len(ambients) > 0 {
+						fmt.Println("📋 Ambientes disponíveis:")
+
+						for _, a := range ambients {
+							fmt.Printf("  - %s\n", a)
+						}
+					}
+
+					return
+				}
+
+				if envs != nil {
+					// Verifica variáveis faltantes antes de substituir
+					missing := FindMissingEnvs(data, envs)
+					if len(missing) > 0 {
+						fmt.Printf("❌ Variáveis não encontradas no ambiente '%s': %v\n", envToUse, missing)
+						fmt.Println("💡 Verifique o arquivo envs.json e adicione as variáveis necessárias")
+
+						return
+					}
+
+					data = ReplaceEnvs(data, envs)
+
+					fmt.Printf("🔧 Ambiente: %s\n", envToUse)
+				}
 			}
 
 			var tc rabbix.TestCase
@@ -209,6 +258,8 @@ Exemplo: rabbix run meu-teste`,
 		"Quantidade de vezes que o caso de teste será executado")
 	cmd.Flags().StringVar(&mockSpec, "mock", "",
 		"Array JSON ou lista separada por vírgulas de pares 'campo:tipo' para gerar dados dinâmicos")
+	cmd.Flags().StringVar(&envAmbient, "env", "",
+		"Nome do ambiente no arquivo de envs para substituir variáveis ${VAR} no JSON")
 
 	return cmd
 }

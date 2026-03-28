@@ -10,6 +10,7 @@ var (
 	outputDir string
 	user      string
 	password  string
+	env       string
 )
 
 type Conf struct {
