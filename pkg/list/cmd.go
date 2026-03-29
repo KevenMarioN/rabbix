@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/maxwelbm/rabbix/pkg/sett"
 	"github.com/spf13/cobra"
@@ -16,6 +17,7 @@ func CmdList(settings sett.SettItf) *cobra.Command {
 		Short: "Lista todos os casos de teste salvos",
 		Run: func(_ *cobra.Command, args []string) {
 			settings := settings.LoadSettings()
+
 			outputDir := settings["output_dir"]
 			if outputDir == "" {
 				home, _ := os.UserHomeDir()
@@ -31,8 +33,16 @@ func CmdList(settings sett.SettItf) *cobra.Command {
 			fmt.Println("📄 Casos de teste:")
 
 			for _, file := range files {
-				if filepath.Ext(file.Name()) == ".json" {
-					path := filepath.Join(outputDir, file.Name())
+				name := file.Name()
+				if filepath.Ext(name) == ".json" {
+					// Ignora arquivos de variáveis de ambiente
+					baseName := strings.TrimSuffix(name, ".json")
+					if strings.EqualFold(baseName, "env") || strings.EqualFold(baseName, "envs") {
+						continue
+					}
+
+					path := filepath.Join(outputDir, name)
+
 					data, err := os.ReadFile(path)
 					if err != nil {
 						continue

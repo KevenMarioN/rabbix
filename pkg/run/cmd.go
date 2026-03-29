@@ -37,8 +37,9 @@ func New(
 
 func (r *Run) CmdRun() *cobra.Command {
 	var (
-		quantity int
-		mockSpec string
+		quantity   int
+		mockSpec   string
+		envAmbient string
 	)
 
 	var cmd = &cobra.Command{
@@ -59,8 +60,17 @@ Exemplo: rabbix run meu-teste`,
 		Run: func(cmd *cobra.Command, args []string) {
 			testName := args[0]
 
+			// Validação: --env e --mock são mutuamente exclusivos
+			if envAmbient != "" && strings.TrimSpace(mockSpec) != "" {
+				fmt.Println("❌ Erro: As flags --env e --mock não podem ser usadas juntas")
+				fmt.Println("💡 Use --env para substituir variáveis do ambiente ou --mock para gerar dados dinâmicos")
+
+				return
+			}
+
 			// Carrega configuração para obter diretório de saída
 			settings := r.settings.LoadSettings()
+
 			outputDir := settings["output_dir"]
 			if outputDir == "" {
 				home, _ := os.UserHomeDir()
@@ -69,11 +79,53 @@ Exemplo: rabbix run meu-teste`,
 
 			// Lê o arquivo do teste
 			testPath := filepath.Join(outputDir, testName+".json")
+
 			data, err := os.ReadFile(testPath)
 			if err != nil {
 				fmt.Printf("❌ Erro: Teste '%s' não encontrado em %s\n", testName, testPath)
 				fmt.Println("💡 Use 'rabbix list' para ver os testes disponíveis")
+
 				return
+			}
+
+			// Substituição de variáveis de ambiente
+			// Prioridade: --env > default_env da configuração
+			envToUse := envAmbient
+			if envToUse == "" {
+				envToUse = settings["default_env"]
+			}
+
+			if envToUse != "" {
+				envs, err := r.settings.LoadEnvs(envToUse)
+				if err != nil {
+					fmt.Printf("❌ Erro ao carregar ambiente '%s': %v\n", envToUse, err)
+
+					ambients, listErr := r.settings.ListAmbients()
+					if listErr == nil && len(ambients) > 0 {
+						fmt.Println("📋 Ambientes disponíveis:")
+
+						for _, a := range ambients {
+							fmt.Printf("  - %s\n", a)
+						}
+					}
+
+					return
+				}
+
+				if envs != nil {
+					// Verifica variáveis faltantes antes de substituir
+					missing := FindMissingEnvs(data, envs)
+					if len(missing) > 0 {
+						fmt.Printf("❌ Variáveis não encontradas no ambiente '%s': %v\n", envToUse, missing)
+						fmt.Println("💡 Verifique o arquivo envs.json e adicione as variáveis necessárias")
+
+						return
+					}
+
+					data = ReplaceEnvs(data, envs)
+
+					fmt.Printf("🔧 Ambiente: %s\n", envToUse)
+				}
 			}
 
 			var tc rabbix.TestCase
@@ -89,6 +141,7 @@ Exemplo: rabbix run meu-teste`,
 
 			// Parser do mockSpec -> []string de "campo:tipo"
 			var mockPairs []string
+
 			if strings.TrimSpace(mockSpec) != "" {
 				// permite JSON array ou lista separada por vírgula
 				trim := strings.TrimSpace(mockSpec)
@@ -120,6 +173,7 @@ Exemplo: rabbix run meu-teste`,
 			if quantity > 1 {
 				fmt.Printf("🔁 Quantidade: %d\n", quantity)
 			}
+
 			if len(mockPairs) > 0 {
 				fmt.Printf("🧪 Mock: %v\n", mockPairs)
 			}
@@ -129,18 +183,23 @@ Exemplo: rabbix run meu-teste`,
 				if len(mockPairs) > 0 {
 					seed := time.Now().UnixNano() + int64(i)
 					rng := rand.New(rand.NewSource(seed))
+
 					for _, pair := range mockPairs {
 						if pair == "" {
 							continue
 						}
+
 						parts := strings.SplitN(pair, ":", 2)
 						if len(parts) != 2 {
 							fmt.Printf("⚠️  Par inválido em --mock: '%s' (esperado 'campo:tipo')\n", pair)
 							continue
 						}
+
 						field := strings.TrimSpace(parts[0])
 						typeName := strings.ToLower(strings.TrimSpace(parts[1]))
+
 						var value any
+
 						switch typeName {
 						case "int":
 							value = rng.Intn(1000000)
@@ -154,6 +213,7 @@ Exemplo: rabbix run meu-teste`,
 							value = rng.Intn(2) == 0
 						default:
 							fmt.Printf("⚠️  Tipo desconhecido '%s' para campo '%s'. Usando string.\n", typeName, field)
+
 							value = randomString(8, rng)
 						}
 						// aplica no JSONPool
@@ -198,6 +258,8 @@ Exemplo: rabbix run meu-teste`,
 		"Quantidade de vezes que o caso de teste será executado")
 	cmd.Flags().StringVar(&mockSpec, "mock", "",
 		"Array JSON ou lista separada por vírgulas de pares 'campo:tipo' para gerar dados dinâmicos")
+	cmd.Flags().StringVar(&envAmbient, "env", "",
+		"Nome do ambiente no arquivo de envs para substituir variáveis ${VAR} no JSON")
 
 	return cmd
 }

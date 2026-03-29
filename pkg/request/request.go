@@ -33,6 +33,7 @@ func (r *Request) Request(testCase rabbix.TestCase) (*http.Response, error) {
 	if auth == "" {
 		fmt.Printf("necessario configurar user e password com o comando 'rabbix conf set" + "" +
 			" --user <user> --password <password>'\n")
+
 		return nil, fmt.Errorf("autenticação não configurada")
 	}
 
