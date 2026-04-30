@@ -30,6 +30,10 @@ func (c *Conf) CmdSet() *cobra.Command {
 				settings["auth"] = string(auth)
 			}
 
+			if env != "" {
+				settings["default_env"] = env
+			}
+
 			c.settings.SaveSettings(settings)
 			fmt.Println("✅ Configuração atualizada com sucesso.")
 		},
@@ -38,6 +42,7 @@ func (c *Conf) CmdSet() *cobra.Command {
 	cmd.Flags().StringVar(&outputDir, "output", "", "Diretório para salvar os testes")
 	cmd.Flags().StringVar(&user, "user", "", "Usuário do RabbitMQ (texto puro ou base64)")
 	cmd.Flags().StringVar(&password, "password", "", "Senha do RabbitMQ (texto puro ou base64)")
+	cmd.Flags().StringVar(&env, "env", "", "Ambiente padrão para substituição de variáveis (ex: local, dev, prod)")
 
 	return cmd
 }
